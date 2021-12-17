@@ -84,14 +84,14 @@ def collectFromEndnote(rba_path):
 
     Returns
     -------
-    referenceList : list of dictionaries
+    references_list : list of dictionaries
         Contains the extracted DOI, authors, and title
         for each reference as an object.
     """
     doc = Document(rba_path) # create an instance of a word document we want to open
 
     findBegin = False
-    referenceList = []
+    references_list = []
 
     for i in range(0, len(doc.paragraphs)):
         if (doc.paragraphs[i].text.lower().startswith('references') or \
@@ -134,8 +134,8 @@ def collectFromEndnote(rba_path):
                     continue
 
 
-            referenceList.append(search_item)
-    return referenceList
+            references_list.append(search_item)
+    return references_list
 
 def collectFromTables(rba_path):
     """Extracts the reference list from a file with a table
@@ -147,38 +147,50 @@ def collectFromTables(rba_path):
 
     Returns
     -------
-    referenceList : list of dictionaries
+    references_list : list of dictionaries
         Contains the extracted authors and title for each reference as an object
     """
     doc = Document(rba_path)
-    # table_headers = ['bron', 'bewijs', 'effect', 'opmerkingen', 'source', 'evidence', 'effect', 'remarks']
 
     data = []
-    referencesFromTables = []
+    references_list = []
     for table in doc.tables:
 
         for i, row in enumerate(table.rows):
-            text = [cell.text.lower() for cell in row.cells]
-            if i == 0:
-                effect_index = text.index('effect') if 'effect' in text else None
-                continue
 
             for j, cell in enumerate(row.cells):
 
-                if j == effect_index:
+                if (cell.paragraphs[0].runs[0].bold
+                    and ('samenvatting' in cell.text.lower()
+                         or 'summary' in cell.text.lower())):
 
                     bold_text = ''
                     p_title = ''
                     p_authors = ''
-                    untilSummary = False
 
                     for p, paragraph in enumerate(cell.paragraphs):
 
                         if len(paragraph.runs) < 1:
                             continue
 
-                        if (paragraph.runs[0].bold
-                            and paragraph.runs[-1].bold and p_title == ''):
+                        if (p == 0
+                            and paragraph.runs[0].bold
+                            and not paragraph.runs[-1].bold):
+
+                            for r, run in enumerate(paragraph.runs):
+
+                                if run.bold:
+                                    bold_text += run.text.strip() + ' '
+
+                                else:
+                                    p_title = bold_text
+
+                                if p_title and not run.bold and run.text != ' ':
+
+                                    p_authors += run.text.strip() + ' '
+
+                        elif (paragraph.runs[0].bold
+                              and paragraph.runs[-1].bold and p_title == ''):
 
                             bold_text += paragraph.text.strip() + ' '
 
@@ -189,28 +201,27 @@ def collectFromTables(rba_path):
 
                             p_title = bold_text
 
-                            p_authors = ' '.join([p_authors, paragraph.text.strip()])
+                            p_authors += paragraph.text.strip() + ' '
 
                         elif (paragraph.runs[0].underline
                               and (paragraph.runs[0].text.lower().startswith('samenvatting')
                                    or paragraph.runs[0].text.lower().startswith('summary'))):
-
                             break
 
                     if p_title.strip() != ''  and re.search(r'^[0-9].[0-9]', p_title) is None:
-                        referencesFromTables.append({
-                            'p_title': p_title.strip().replace('\xa0',' '),
-                            'p_authors': p_authors,
+                        references_list.append({
+                            'p_title': p_title.replace('\xa0',' ').replace('\n', '').strip(),
+                            'p_authors': p_authors.replace('\xa0',' ').replace('\n', '').strip(),
                         })
 
-    return referencesFromTables
+    return references_list
 
-def writeFromEndnoteTOCsv(referenceList, csv_path):
+def pubmed2csv(references_list, csv_path):
     """Creates a csv file consists of the references
 
     Parameters
     ----------
-    referenceList : list of dictionaries
+    references_list : list of dictionaries
         Contains dictionaries with paper DOIs, authors and titles
 
     csv_path : string
@@ -220,26 +231,24 @@ def writeFromEndnoteTOCsv(referenceList, csv_path):
     -------
     Creates a csv file on the given CSV path
     """
-    header = ['record_id', 'title', 'abstract', 'doi', 'final_included']
-    with open(csv_path, 'w', newline='') as csvfile:
-        cw = csv.writer(csvfile, delimiter=',')
-        cw.writerow(header)
+    if not os.path.exists(csv_path):
+        header = ['record_id', 'title', 'abstract', 'doi', 'final_included']
+        with open(csv_path, 'w', newline='') as csvfile:
+            cw = csv.writer(csvfile, delimiter=',')
+            cw.writerow(header)
 
-    #Loop over the reference list in the docx file
-    for ref in referenceList:
-        search_query = ref['p_doi'] if ref['p_doi'] else ref['p_title']
-    #     print('#search_query', search_query)
+    #Loop over the reference list
+    for ref in references_list:
+        search_query = ref['p_doi'] if 'p_doi' in ref and len(ref['p_doi']) > 0 else ref['p_title']
         try:
             PubmedSearchResults = search_API(search_query)
             id_list = PubmedSearchResults['IdList']
-            #todo If id_list is empty find a ways to reproduce it
             papers = fetch_details(id_list)
             referenceFound = False
 
             for paperIndex, paper in enumerate(papers['PubmedArticle']):
                 paperTitle = paper['MedlineCitation']['Article']['ArticleTitle'].strip(punctuation).strip()
                 if (Simhash(paperTitle).distance(Simhash(ref['p_title'])) <= 5):
-                    # Todo Add Author confirmation as well
                     doi = ''
                     for idn, ids in enumerate(papers['PubmedArticle'][paperIndex]['PubmedData']['ArticleIdList']):
                         if papers['PubmedArticle'][paperIndex]['PubmedData']['ArticleIdList'][idn].attributes['IdType'] == 'doi':
@@ -256,72 +265,6 @@ def writeFromEndnoteTOCsv(referenceList, csv_path):
                     referenceFound = True
                     break
             if not referenceFound:
-                if (len(search_query.split(' ')) < 8):
-                    search_query = search_query + ' ' + ref['p_authors'].split(' ')[0]
-                    print('!!!!!!!!!!!!!!!', search_query)
-    #                 elif (len(search_query.split(' ')) >= 8):
-    #                 If it is longer divide it half first then remove 1 by 1
-
-
+                print('!!!!!!!!!!!!!!! The reference could not be found automaticaly: ', search_query)
         except:
             print('!!!! The reference could not be found automaticaly: ', ref['p_title'])
-
-def writeFromTablesToCsv(referencesFromTables, csv_path):
-    """Creates a csv file consists of the references
-
-    Parameters
-    ----------
-    referencesFromTables : list of dictionaries
-        Contains dictionaries with paper DOIs, authors and titles
-
-    csv_path : string
-        corresponding csv path for the file
-
-    Returns
-    -------
-    Creates a csv file on the given CSV path
-    """
-    header = ['record_id', 'title', 'abstract', 'doi', 'final_included']
-    with open(csv_path, 'w', newline='') as csvfile:
-        cw = csv.writer(csvfile, delimiter=',')
-        cw.writerow(header)
-
-    #Loop over the reference list in the docx file
-    for ref in referencesFromTables:
-        ref = ref['title'].strip()
-
-        if (ref.lower().startswith('reference') or ref.lower().startswith('referen')):
-            print('There might be some problem with the reference below. \
-                Please check and add the reference if it is not on the list',ref)
-            continue
-        elif (ref.strip() == ''):
-            print('There might be some problem with the reference below. \
-                Please check and add the reference if it is not on the list',ref)
-            continue
-        else:
-            try:
-                papers = searchArticle(ref)
-                referenceFound = False
-
-                for paperIndex, paper in enumerate(papers['PubmedArticle']):
-                    paperTitle = paper['MedlineCitation']['Article']['ArticleTitle'].strip(punctuation).strip()
-                    if (paperTitle == textTitle.strip(punctuation).strip()):
-                        doi = ''
-                        for idn, ids in enumerate(papers['PubmedArticle'][paperIndex]['PubmedData']['ArticleIdList']):
-                            if papers['PubmedArticle'][paperIndex]['PubmedData']['ArticleIdList'][idn].attributes['IdType'] == 'doi':
-                                doi = papers['PubmedArticle'][paperIndex]['PubmedData']['ArticleIdList'][idn]
-
-                        abstract = ''
-                        if 'Abstract' in paper['MedlineCitation']['Article']:
-                            abstract = ' '.join([str(x) for x in paper['MedlineCitation']['Article']['Abstract']['AbstractText']])
-
-                        data = [id_list[paperIndex], paperTitle, abstract, doi, 1]
-                        with open(csv_path, 'a') as csvfile:
-                            cw = csv.writer(csvfile, delimiter=',')
-                            cw.writerow(data)
-                        referenceFound = True
-                        break
-
-            except:
-                print('!!!! The reference could not be found automaticaly, please add it to the list manually')
-                print(ref)
