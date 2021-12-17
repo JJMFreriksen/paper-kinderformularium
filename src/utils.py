@@ -1,24 +1,47 @@
 from Bio import Entrez
-email='simgeekiz48@gmail.com'
 from Bio.Entrez import efetch, read
 import os
 from string import punctuation
 import re
-import csv 
-
+import csv
+from simhash import Simhash, SimhashIndex
 from docx import Document
 
+email = 'simgeekiz48@gmail.com'
+
 def search_API(query):
+    """Retrieves ids of relevant papers from PubMed API
+
+    Parameters
+    ----------
+    query : string
+        DOI or title from a targeted paper
+
+    Returns
+    -------
+    results : list of integers
+        Plain list of paper ids
+    """
     Entrez.email = email
-    handle = Entrez.esearch(db='pubmed', 
-                            sort='relevance', 
+    handle = Entrez.esearch(db='pubmed',
+                            sort='relevance',
                             retmax='20',
-                            retmode='xml', 
+                            retmode='xml',
                             term=query)
     results = Entrez.read(handle)
     return results
 
 def fetch_details(id_list):
+    """Retrieves the papers from PubMed API by their ids
+
+    Parameters
+    ----------
+    id_list : list of integers
+
+    Returns
+    -------
+    results : list of dictionaries
+    """
     ids = ','.join(id_list)
     Entrez.email = email
     handle = Entrez.efetch(db='pubmed',
@@ -26,8 +49,20 @@ def fetch_details(id_list):
                            id=ids)
     results = Entrez.read(handle)
     return results
-    
+
 def create_csv_path(rba_path):
+    """Creates a csv path for the output
+
+    Parameters
+    ----------
+    rba_path : string
+        Path to the file to be processed.
+        This file must be a .docx formatted file.
+
+    Returns
+    -------
+    csv_path : string
+    """
     csv_dir = os.path.abspath(os.path.join(os.path.dirname(rba_path), 'csv'))
     if not os.path.exists(csv_dir):
         os.makedirs(csv_dir)
@@ -35,10 +70,26 @@ def create_csv_path(rba_path):
     head, filename = os.path.split(rba_path)
     csv_path = os.path.join(csv_dir, filename.replace('.docx', '.csv'))
     return csv_path
-    
+
 def collectFromEndnote(rba_path):
+    """Extracts the reference list from a file with Endnote
+
+    Parameters
+    ----------
+    rba_path : string
+        Path to the file to be processed.
+        This file must be a .docx formatted file.
+        The file must contain a text sayin at least "referen"
+        in order to function properly
+
+    Returns
+    -------
+    referenceList : list of dictionaries
+        Contains the extracted DOI, authors, and title
+        for each reference as an object.
+    """
     doc = Document(rba_path) # create an instance of a word document we want to open
-    
+
     findBegin = False
     referenceList = []
 
@@ -48,15 +99,15 @@ def collectFromEndnote(rba_path):
             for run in doc.paragraphs[i].runs:
                 if run.bold:
                     findBegin = True
-                    
+
         if (findBegin == True):
             ref = doc.paragraphs[i].text.strip()
             if (ref.lower().startswith('referen')):
                 continue
             elif (ref.strip() == ''):
                 continue
-            else: 
-                
+            else:
+
                 search_item = {
                     'original_text': ref,
                     'p_authors': '',
@@ -66,7 +117,7 @@ def collectFromEndnote(rba_path):
                 x1 = re.findall("(.*et al.?)([^.]+).", ref)
                 x2 = re.findall("(.*)\d{4}.?\s?(\".*\")", ref)
                 x3 = re.findall(r'doi:?\s?(.+).?', ref)
-                
+
                 if x3:
                     search_item['p_doi'] = x3[0].strip(punctuation).strip()
 
@@ -81,19 +132,31 @@ def collectFromEndnote(rba_path):
                 elif (ref.lower().startswith('who') or ref.lower().startswith('lci') \
                       or ref.lower().startswith('nvn') or ref.lower().startswith('nice')):
                     continue
-    
-    
+
+
             referenceList.append(search_item)
     return referenceList
 
 def collectFromTables(rba_path):
+    """Extracts the reference list from a file with a table
+
+    Parameters
+    ----------
+    rba_path : string
+        Path of the file to be processed
+
+    Returns
+    -------
+    referenceList : list of dictionaries
+        Contains the extracted authors and title for each reference as an object
+    """
     doc = Document(rba_path)
     # table_headers = ['bron', 'bewijs', 'effect', 'opmerkingen', 'source', 'evidence', 'effect', 'remarks']
 
     data = []
     referencesFromTables = []
     for table in doc.tables:
-        
+
         for i, row in enumerate(table.rows):
             text = [cell.text.lower() for cell in row.cells]
             if i == 0:
@@ -114,12 +177,12 @@ def collectFromTables(rba_path):
                         if len(paragraph.runs) < 1:
                             continue
 
-                        if (paragraph.runs[0].bold 
+                        if (paragraph.runs[0].bold
                             and paragraph.runs[-1].bold and p_title == ''):
 
                             bold_text += paragraph.text.strip() + ' '
 
-                        elif (not paragraph.runs[-1].bold 
+                        elif (not paragraph.runs[-1].bold
                               and p > 0
                               and len(cell.paragraphs[p-1].runs) > 0
                               and cell.paragraphs[p-1].runs[-1].bold):
@@ -128,15 +191,137 @@ def collectFromTables(rba_path):
 
                             p_authors = ' '.join([p_authors, paragraph.text.strip()])
 
-                        elif (paragraph.runs[0].underline 
-                              and (paragraph.runs[0].text.lower().startswith('samenvatting') 
+                        elif (paragraph.runs[0].underline
+                              and (paragraph.runs[0].text.lower().startswith('samenvatting')
                                    or paragraph.runs[0].text.lower().startswith('summary'))):
 
                             break
 
-                    if p_title.strip() != ''  and re.search(r'^[0-9].[0-9]', p_title) is None: 
+                    if p_title.strip() != ''  and re.search(r'^[0-9].[0-9]', p_title) is None:
                         referencesFromTables.append({
                             'p_title': p_title.strip().replace('\xa0',' '),
                             'p_authors': p_authors,
                         })
+
     return referencesFromTables
+
+def writeFromEndnoteTOCsv(referenceList, csv_path):
+    """Creates a csv file consists of the references
+
+    Parameters
+    ----------
+    referenceList : list of dictionaries
+        Contains dictionaries with paper DOIs, authors and titles
+
+    csv_path : string
+        corresponding csv path for the file
+
+    Returns
+    -------
+    Creates a csv file on the given CSV path
+    """
+    header = ['record_id', 'title', 'abstract', 'doi', 'final_included']
+    with open(csv_path, 'w', newline='') as csvfile:
+        cw = csv.writer(csvfile, delimiter=',')
+        cw.writerow(header)
+
+    #Loop over the reference list in the docx file
+    for ref in referenceList:
+        search_query = ref['p_doi'] if ref['p_doi'] else ref['p_title']
+    #     print('#search_query', search_query)
+        try:
+            PubmedSearchResults = search_API(search_query)
+            id_list = PubmedSearchResults['IdList']
+            #todo If id_list is empty find a ways to reproduce it
+            papers = fetch_details(id_list)
+            referenceFound = False
+
+            for paperIndex, paper in enumerate(papers['PubmedArticle']):
+                paperTitle = paper['MedlineCitation']['Article']['ArticleTitle'].strip(punctuation).strip()
+                if (Simhash(paperTitle).distance(Simhash(ref['p_title'])) <= 5):
+                    # Todo Add Author confirmation as well
+                    doi = ''
+                    for idn, ids in enumerate(papers['PubmedArticle'][paperIndex]['PubmedData']['ArticleIdList']):
+                        if papers['PubmedArticle'][paperIndex]['PubmedData']['ArticleIdList'][idn].attributes['IdType'] == 'doi':
+                            doi = papers['PubmedArticle'][paperIndex]['PubmedData']['ArticleIdList'][idn]
+
+                    abstract = ''
+                    if 'Abstract' in paper['MedlineCitation']['Article']:
+                        abstract = ' '.join([str(x) for x in paper['MedlineCitation']['Article']['Abstract']['AbstractText']])
+
+                    data = [id_list[paperIndex], paperTitle, abstract, doi, 1]
+                    with open(csv_path, 'a') as csvfile:
+                        cw = csv.writer(csvfile, delimiter=',')
+                        cw.writerow(data)
+                    referenceFound = True
+                    break
+            if not referenceFound:
+                if (len(search_query.split(' ')) < 8):
+                    search_query = search_query + ' ' + ref['p_authors'].split(' ')[0]
+                    print('!!!!!!!!!!!!!!!', search_query)
+    #                 elif (len(search_query.split(' ')) >= 8):
+    #                 If it is longer divide it half first then remove 1 by 1
+
+
+        except:
+            print('!!!! The reference could not be found automaticaly: ', ref['p_title'])
+
+def writeFromTablesToCsv(referencesFromTables, csv_path):
+    """Creates a csv file consists of the references
+
+    Parameters
+    ----------
+    referencesFromTables : list of dictionaries
+        Contains dictionaries with paper DOIs, authors and titles
+
+    csv_path : string
+        corresponding csv path for the file
+
+    Returns
+    -------
+    Creates a csv file on the given CSV path
+    """
+    header = ['record_id', 'title', 'abstract', 'doi', 'final_included']
+    with open(csv_path, 'w', newline='') as csvfile:
+        cw = csv.writer(csvfile, delimiter=',')
+        cw.writerow(header)
+
+    #Loop over the reference list in the docx file
+    for ref in referencesFromTables:
+        ref = ref['title'].strip()
+
+        if (ref.lower().startswith('reference') or ref.lower().startswith('referen')):
+            print('There might be some problem with the reference below. \
+                Please check and add the reference if it is not on the list',ref)
+            continue
+        elif (ref.strip() == ''):
+            print('There might be some problem with the reference below. \
+                Please check and add the reference if it is not on the list',ref)
+            continue
+        else:
+            try:
+                papers = searchArticle(ref)
+                referenceFound = False
+
+                for paperIndex, paper in enumerate(papers['PubmedArticle']):
+                    paperTitle = paper['MedlineCitation']['Article']['ArticleTitle'].strip(punctuation).strip()
+                    if (paperTitle == textTitle.strip(punctuation).strip()):
+                        doi = ''
+                        for idn, ids in enumerate(papers['PubmedArticle'][paperIndex]['PubmedData']['ArticleIdList']):
+                            if papers['PubmedArticle'][paperIndex]['PubmedData']['ArticleIdList'][idn].attributes['IdType'] == 'doi':
+                                doi = papers['PubmedArticle'][paperIndex]['PubmedData']['ArticleIdList'][idn]
+
+                        abstract = ''
+                        if 'Abstract' in paper['MedlineCitation']['Article']:
+                            abstract = ' '.join([str(x) for x in paper['MedlineCitation']['Article']['Abstract']['AbstractText']])
+
+                        data = [id_list[paperIndex], paperTitle, abstract, doi, 1]
+                        with open(csv_path, 'a') as csvfile:
+                            cw = csv.writer(csvfile, delimiter=',')
+                            cw.writerow(data)
+                        referenceFound = True
+                        break
+
+            except:
+                print('!!!! The reference could not be found automaticaly, please add it to the list manually')
+                print(ref)
