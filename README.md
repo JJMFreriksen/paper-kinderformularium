@@ -12,22 +12,84 @@ Within this repository one can find the scripts that are used to pre-process the
 Risk Analysis Documents to ASReview LAB compatible input files.
 
 ## Installation
+### For Windows
+<!-- 1. ##### Prerequisites   -->
+1. Please install at least Python 3.8 if you do not have already.  
+    a. Open the search field of Windows and enter CMD.  
+    b. Click on Command Prompt.   
+    c. Write python --version in the Command Prompt and press ENTER.  
+    d. If this returns a number higher than 3.8, Python is installed and you can continue with step two. If not, continue to the next step.  
+    e. Install Python.
+    You can download an installer for Windows from <https://www.python.org/downloads/>  
+    f. Install Python for Windows. IMPORTANT: Check the box to add Python to your PATH environment variable during the installation.
+    Or Add Python to your environment manually. You can follow the instructions in this link: https://datatofish.com/add-python-to-windows-path/  
+    ** Notes  
+      * You can also find the environment variables by searching in the search box. If it is not in the same place with the instructions.
+      * Please note that at the end you might need to restart Command Prompt to see the changes.
 
-### Prerequisites  
+  g. Please install Miniconda with the instructions given in this link: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html  
 
-*   Install at least Python 3.8 if you do not have already. There are several ways to install Python depending on the operating system. Alternatively you can download an installer from <https://www.python.org/downloads/>.
+  h. Check if Miniconda is installed.  
+  * Please note that at the end you might need to restart Command Prompt.
 
-### Setup
+    $ conda list
 
-*   Clone the git repository.
+2. #### Setup the project
+   a. Navigate to the folder you want to work on. For example, I collect my projects under the folder name 'workspaces'.
+
+       $ cd C:\Users\username\Documents\workspaces
+
+   b. Clone the git repository. If git is not installed, you can install it by following the instructions in this link: https://phoenixnap.com/kb/how-to-install-git-windows. You might be asked to enter your Github credentials.
+
+       $ git clone <GIT_REPO_URL>
+       # In our case our repository url is:
+       $ git clone https://github.com/asreview/paper-kinderformularium.git    
+
+  c. Navigate to the project folder  
+
+       $ cd  <path-to-project-folder>  
+       # In our case our project folder is:  
+       $ cd C:\Users\username\Documents\workspaces\paper-kinderformularium  
+
+   d. Create a virtual environment to prevent system interference and activate it.
+
+         $ conda create -n .env
+         $ conda activate .env
+
+   d. Install the required Python libraries
+
+        $ conda install --file installation/requirements.txt
+
+### For Linux and Mac OS
+
+1. Please install at least Python 3.8 if you do not have already.  
+    a. Open Your Terminal.In Mac OS open your Launchpad (in your Dock) and search Terminal. In Linux open search area and and find Terminal.
+    b. Click on Terminal.   
+    c. Write python --version in Terminal and press ENTER.
+    d. If this returns a number higher than 3.8, Python is installed and you can continue with step two. If not, continue to the next step.  
+    e. Install Python.
+    You can download an installer for Windows from <https://www.python.org/downloads/>  
+
+2. #### Setup the project
+    a. Navigate to the folder you want to work on. For example, I collect my projects under the folder name 'workspaces'.
+
+        $ cd  <path-to-some-folder>
+
+    b. Clone the git repository.
 
         $ git clone <GIT_REPO_URL>
 
-*   Navigate to the project folder
+    c. Navigate to the project folder
 
         $ cd  <path-to-project-folder>
 
-*   Install the required Python libraries
+    d. Create a virtual environment to prevent system interference and activate it.
+
+        $ pip install virtualenv
+        $ python -m venv .env
+        $ source /bin/activate
+
+    c. Install the required Python libraries
 
         $ pip install -r requirements.txt
 
@@ -52,7 +114,7 @@ The Jupyter notebooks inside `notebooks` folder function as an additional usage 
 
 #### Output format
 - CSV formatted file
-- Contains the columns 'record_id', 'title', 'abstract', 'doi', 'final_included'
+- Contains the columns 'pubmed_id', 'title', 'abstract', 'doi', 'final_included'
 
 ## License
 The content in this repository is published under the [MIT license](https://github.com/asreview/paper-kinderformularium/blob/main/LICENSE).

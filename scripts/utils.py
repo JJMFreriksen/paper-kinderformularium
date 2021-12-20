@@ -232,7 +232,7 @@ def pubmed2csv(references_list, csv_path):
     Creates a csv file on the given CSV path
     """
     if not os.path.exists(csv_path):
-        header = ['record_id', 'title', 'abstract', 'doi', 'final_included']
+        header = ['pubmed_id', 'title', 'abstract', 'doi', 'final_included']
         with open(csv_path, 'w', newline='') as csvfile:
             cw = csv.writer(csvfile, delimiter=',')
             cw.writerow(header)
