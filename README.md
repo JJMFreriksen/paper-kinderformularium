@@ -69,7 +69,9 @@ Risk Analysis Documents to ASReview LAB compatible input files.
    *   Install the required Python libraries:
 
         ``` bash
-        $ conda install --file installation/requirements-w.txt
+        $ conda config --add channels conda-forge
+        $ conda install --file installation/requirements-windows.txt
+        $ conda install -c conda-forge jupyter notebook
         ```
 
 ### For Linux and Mac OS
