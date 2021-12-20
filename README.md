@@ -58,7 +58,7 @@ Risk Analysis Documents to ASReview LAB compatible input files.
 
    d. Install the required Python libraries
 
-        $ conda install --file installation/requirements.txt
+        $ conda install --file installation/requirements-w.txt
 
 ### For Linux and Mac OS
 
@@ -96,7 +96,16 @@ Risk Analysis Documents to ASReview LAB compatible input files.
 ## The scripts
 The scripts, which are inside the `src` folder, are configured to process certain docx formatted files to extract detailed reference information as a CSV file.
 
-The Jupyter notebooks inside `notebooks` folder function as an additional usage guides that shows the code in action.
+#### Running Jupyter notebook  
+
+After activating the virtual environment type in Terminal/Command Prompt  
+
+  * For windows
+        $ jupyter-lab
+  * For Linux and MacOS
+        $ jupyter notebook  
+
+You can run the cells in Jupyter notebook with ctrl^enter  
 
 #### Input formats
 - Input must be a .docx formatted file
