@@ -12,100 +12,135 @@ Within this repository one can find the scripts that are used to pre-process the
 Risk Analysis Documents to ASReview LAB compatible input files.
 
 ## Installation
+
 ### For Windows
-<!-- 1. ##### Prerequisites   -->
-1. Please install at least Python 3.8 if you do not have already.  
-    a. Open the search field of Windows and enter CMD.  
-    b. Click on Command Prompt.   
-    c. Write python --version in the Command Prompt and press ENTER.  
-    d. If this returns a number higher than 3.8, Python is installed and you can continue with step two. If not, continue to the next step.  
-    e. Install Python.
-    You can download an installer for Windows from <https://www.python.org/downloads/>  
-    f. Install Python for Windows. IMPORTANT: Check the box to add Python to your PATH environment variable during the installation.
-    Or Add Python to your environment manually. You can follow the instructions in this link: https://datatofish.com/add-python-to-windows-path/  
-    ** Notes  
-      * You can also find the environment variables by searching in the search box. If it is not in the same place with the instructions.
-      * Please note that at the end you might need to restart Command Prompt to see the changes.
 
-  g. Please install Miniconda with the instructions given in this link: https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html  
+1. ##### Install Miniconda (or Anaconda) for Python 3.8 or higher  
 
-  h. Check if Miniconda is installed.  
-  * Please note that at the end you might need to restart Command Prompt.
+  *   Please install Miniconda following the instructions given in the link: [https://docs.conda.io/projects/conda/en/latest/user-guide/install/windows.html](https://docs.conda.io/projects/conda/en/latest/user-guide/install/windows.html)
 
-    $ conda list
+  * Open the search field of Windows and enter CMD. Click on Command Prompt.
 
-2. #### Setup the project
-   a. Navigate to the folder you want to work on. For example, I collect my projects under the folder name 'workspaces'.
+  *   Check if Miniconda is installed. On the command prompt enter the following. If you see a list of Python packages, the Miniconda is installed. Otherwise, you might see an error (e.g. command not found).
 
+      ``` bash
+      $ conda list
+      ```
+
+      Please note that you may need to restart Command Prompt to see that Miniconda works.
+
+2. ##### Setup the project
+
+   *   Open the search field of Windows and enter CMD. Click on Command Prompt, if it is not already open.
+
+   *   Navigate to the folder you want to download the project. For example, I collect my projects under the folder name 'workspaces':
+
+       ``` bash
+       $ cd  <path-to-some-folder>
+       # In my case the path would look like this:
        $ cd C:\Users\username\Documents\workspaces
+       ```
 
-   b. Clone the git repository. If git is not installed, you can install it by following the instructions in this link: https://phoenixnap.com/kb/how-to-install-git-windows. You might be asked to enter your Github credentials.
+   *   If git is not already installed, you can install it by following the instructions in this link: [https://phoenixnap.com/kb/how-to-install-git-windows](https://phoenixnap.com/kb/how-to-install-git-windows).
 
+   *   Clone the git repository of the project by entering the below commands into the Command Prompt. You might be asked to enter your Github credentials.
+
+       ``` bash
        $ git clone <GIT_REPO_URL>
        # In our case our repository url is:
        $ git clone https://github.com/asreview/paper-kinderformularium.git    
+       ```
 
-  c. Navigate to the project folder  
+   *   Navigate to the project folder  
 
+       ``` bash
        $ cd  <path-to-project-folder>  
-       # In our case our project folder is:  
+       # In our case our project folder name will be "paper-kinderformularium"
        $ cd C:\Users\username\Documents\workspaces\paper-kinderformularium  
+       ```
 
-   d. Create a virtual environment to prevent system interference and activate it.
+   *   Create a virtual environment and activate it to prevent system interference.
 
-         $ conda create -n .env
-         $ conda activate .env
+       ``` bash
+       $ conda create -n .env
+       $ conda activate .env
+       ```
 
-   d. Install the required Python libraries
+   *   Install the required Python libraries:
 
+        ``` bash
         $ conda install --file installation/requirements-w.txt
+        ```
 
 ### For Linux and Mac OS
 
-1. Please install at least Python 3.8 if you do not have already.  
-    a. Open Your Terminal.In Mac OS open your Launchpad (in your Dock) and search Terminal. In Linux open search area and and find Terminal.
-    b. Click on Terminal.   
-    c. Write python --version in Terminal and press ENTER.
-    d. If this returns a number higher than 3.8, Python is installed and you can continue with step two. If not, continue to the next step.  
-    e. Install Python.
-    You can download an installer for Windows from <https://www.python.org/downloads/>  
+1. ##### Install at least Python 3.8 if you do not have already.  
 
-2. #### Setup the project
-    a. Navigate to the folder you want to work on. For example, I collect my projects under the folder name 'workspaces'.
+    *   Open Your Terminal. In Mac OS open your Launchpad (in your Dock) and search Terminal. In Linux open search area and and find Terminal.
 
+    *   Enter the following command in Terminal to check the Python version. If this returns a number higher than 3.8, Python is installed and you can continue with step two. If not, continue to the next step.  
+
+        ``` bash
+        $ python --version
+        ```
+
+    *   Install Python. You can download an installer for Linux/Mac OS from [https://www.python.org/downloads/](https://www.python.org/downloads/).
+
+2. ##### Setup the project
+
+    *   On your terminal, navigate to the folder you want to download the project.
+
+        ``` bash
         $ cd  <path-to-some-folder>
+        ```
 
-    b. Clone the git repository.
+    *   Clone the git repository.
 
+        ``` bash
         $ git clone <GIT_REPO_URL>
+        ```
 
-    c. Navigate to the project folder
+    *   Navigate to the project folder
 
+        ``` bash
         $ cd  <path-to-project-folder>
+        ```
 
-    d. Create a virtual environment to prevent system interference and activate it.
+    *   Create a virtual environment to prevent system interference and activate it.
 
+        ``` bash
         $ pip install virtualenv
         $ python -m venv .env
         $ source /bin/activate
+        ```
 
-    c. Install the required Python libraries
+    *   Install the required Python libraries
 
-        $ pip install -r requirements.txt
+        ``` bash
+        $ pip install -r installation/requirements.txt
+        ```
 
 ## The scripts
+
 The scripts, which are inside the `src` folder, are configured to process certain docx formatted files to extract detailed reference information as a CSV file.
 
 #### Running Jupyter notebook  
 
-After activating the virtual environment type in Terminal/Command Prompt  
+After activating the virtual environment (On Windows with `conda` command) type in Command Prompt/Terminal:
 
-  * For windows
+  * For windows:
+
+        ``` bash
         $ jupyter-lab
-  * For Linux and MacOS
-        $ jupyter notebook  
+        ```
 
-You can run the cells in Jupyter notebook with ctrl^enter  
+  * For Linux and MacOS:
+
+        ``` bash
+        $ jupyter notebook  
+        ```
+
+You can run the cells in Jupyter notebook by pressing `CTRL^Enter`.
 
 #### Input formats
 - Input must be a .docx formatted file

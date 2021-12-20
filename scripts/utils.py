@@ -155,12 +155,20 @@ def collectFromTables(rba_path):
     data = []
     references_list = []
     for table in doc.tables:
+        
+        if len(table.rows) == 0:
+            continue
 
         for i, row in enumerate(table.rows):
+            
+            if len(row.cells) == 0:
+                continue
 
             for j, cell in enumerate(row.cells):
-
-                if (cell.paragraphs[0].runs[0].bold
+                
+                if (len(cell.paragraphs) > 0
+                    and len(cell.paragraphs[0].runs) > 0 
+                    and cell.paragraphs[0].runs[0].bold
                     and ('samenvatting' in cell.text.lower()
                          or 'summary' in cell.text.lower())):
 
