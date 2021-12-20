@@ -1,4 +1,4 @@
-# Pre-processing systematic review data for the Dutch Pediatric Formulary
+# Scripts - Reviewing Scientific Literature for Risk-Benefit Analysis of the Dutch Pediatric Formulary 
 
 This repository is part of a project of the Dutch Pediatric Formulary to evaluate
 the benefit of using ASReview LAB for the development of Risk Benefit Analysis (RBA).
