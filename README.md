@@ -24,7 +24,7 @@ Risk Analysis Documents to ASReview LAB compatible input files.
   *   Check if Miniconda is installed. On the command prompt enter the following. If you see a list of Python packages, the Miniconda is installed. Otherwise, you might see an error (e.g. command not found).
 
       ``` bash
-      $ conda list
+      conda list
       ```
 
       Please note that you may need to restart Command Prompt to see that Miniconda works.
@@ -38,43 +38,43 @@ Risk Analysis Documents to ASReview LAB compatible input files.
      ![image](https://user-images.githubusercontent.com/64579032/147078737-2098241e-9588-4a2c-b5ff-9a0a75e6164c.png)
   
 
-       ``` bash
-       $ cd  <path-to-some-folder>
-       # In my case the path would look like this:
-       $ cd C:\Users\username\Documents\workspaces
-       ```
+      ``` bash
+      cd  <path-to-some-folder>
+      # In my case the path would look like this:
+      cd C:\Users\username\Documents\workspaces
+      ```
 
    *   If git is not already installed, you can install it by following the instructions in this link: [https://phoenixnap.com/kb/how-to-install-git-windows](https://phoenixnap.com/kb/how-to-install-git-windows).
 
    *   Clone the git repository of the project by entering the below commands into the Command Prompt. You might be asked to enter your Github credentials.
 
        ``` bash
-       $ git clone <GIT_REPO_URL>
+       git clone <GIT_REPO_URL>
        # In our case our repository url is:
-       $ git clone https://github.com/asreview/paper-kinderformularium.git    
+       git clone https://github.com/asreview/paper-kinderformularium.git    
        ```
 
    *   Navigate to the project folder  
 
        ``` bash
-       $ cd  <path-to-project-folder>  
+       cd  <path-to-project-folder>  
        # In our case our project folder name will be "paper-kinderformularium"
-       $ cd C:\Users\username\Documents\workspaces\paper-kinderformularium  
+       cd C:\Users\username\Documents\workspaces\paper-kinderformularium  
        ```
 
    *   Create a virtual environment and activate it to prevent system interference.
 
        ``` bash
-       $ conda create -n .env
-       $ conda activate .env
+       conda create -n .env
+       conda activate .env
        ```
 
    *   Install the required Python libraries:
 
         ``` bash
-        $ conda config --add channels conda-forge
-        $ conda install --file installation/requirements-windows.txt
-        $ conda install -c conda-forge jupyter notebook
+        conda config --add channels conda-forge
+        conda install --file installation/requirements-windows.txt
+        conda install -c conda-forge jupyter notebook
         ```
 
 ### For Linux and Mac OS
@@ -135,15 +135,15 @@ After activating the virtual environment (On Windows with `conda` command) type 
 
   * For windows:
 
-        ``` bash
-        $ jupyter-lab
-        ```
+    ```
+    jupyter notebook  
+    ```
 
   * For Linux and MacOS:
 
-        ``` bash
-        $ jupyter notebook  
-        ```
+    ``` bash
+    $ jupyter notebook  
+    ```
 
 You can run the cells in Jupyter notebook by pressing `CTRL^Enter`.
 
