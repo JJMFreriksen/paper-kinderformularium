@@ -34,6 +34,9 @@ Risk Analysis Documents to ASReview LAB compatible input files.
    *   Open the search field of Windows and enter CMD. Click on Command Prompt, if it is not already open.
 
    *   Navigate to the folder you want to download the project. For example, I collect my projects under the folder name 'workspaces':
+     *   TIP: You can easily copy the path ot your folder by going to the folder in windows explorer and clicking on the filepath and pressing Ctrl + c. Then you can paste it in              Command Prompt with Ctrl + v.
+     ![image](https://user-images.githubusercontent.com/64579032/147078737-2098241e-9588-4a2c-b5ff-9a0a75e6164c.png)
+  
 
        ``` bash
        $ cd  <path-to-some-folder>
