@@ -4,12 +4,16 @@ import os
 from string import punctuation
 import re
 import csv
+import logging
 from simhash import Simhash, SimhashIndex
 from docx import Document
 
-email = 'simgeekiz48@gmail.com'
+logging.basicConfig(filename='../data/paper-kinderformularium.log',
+                    format='%(asctime)s|%(levelname)-8s|%(message)s',
+                    level=logging.INFO,
+                    datefmt='%Y-%m-%d %H:%M:%S')
 
-def search_API(query):
+def search_API(query, email):
     """Retrieves ids of relevant papers from PubMed API
 
     Parameters
@@ -31,7 +35,7 @@ def search_API(query):
     results = Entrez.read(handle)
     return results
 
-def fetch_details(id_list):
+def fetch_details(id_list, email):
     """Retrieves the papers from PubMed API by their ids
 
     Parameters
@@ -68,7 +72,12 @@ def create_csv_path(rba_path):
         os.makedirs(csv_dir)
 
     head, filename = os.path.split(rba_path)
-    csv_path = os.path.join(csv_dir, filename.replace('.docx', '.csv'))
+    no = re.findall("^([0-9]+)([^.]+)(.*\.docx)", filename)
+    if no and no[0][1] != '':
+        csv_path = os.path.join(csv_dir, (no[0][0] + no[0][2]).replace('.docx', '.csv'))
+    else:
+        csv_path = os.path.join(csv_dir, filename.replace('.docx', '.csv'))
+
     return csv_path
 
 def collectFromEndnote(rba_path):
@@ -114,7 +123,8 @@ def collectFromEndnote(rba_path):
                     'p_title': '',
                     'p_doi': ''
                 }
-                x1 = re.findall("(.*et al.?)([^.]+).", ref)
+#                 x1 = re.findall("(.*et al.?)([^.]+).", ref)
+                x1 = re.findall("([^.]+).([^.]+).", ref)
                 x2 = re.findall("(.*)\d{4}.?\s?(\".*\")", ref)
                 x3 = re.findall(r'doi:?\s?(.+).?', ref)
 
@@ -125,7 +135,7 @@ def collectFromEndnote(rba_path):
                     search_item['p_authors'] = x1[0][0].strip(punctuation).strip()
                     search_item['p_title'] = x1[0][1].strip(punctuation).strip()
 
-                elif x2:
+                if x2:
                     search_item['p_authors'] = x2[0][0].strip(punctuation).strip()
                     search_item['p_title'] = x2[0][1].strip(punctuation).strip()
 
@@ -155,19 +165,19 @@ def collectFromTables(rba_path):
     data = []
     references_list = []
     for table in doc.tables:
-        
+
         if len(table.rows) == 0:
             continue
 
         for i, row in enumerate(table.rows):
-            
+
             if len(row.cells) == 0:
                 continue
 
             for j, cell in enumerate(row.cells):
-                
+
                 if (len(cell.paragraphs) > 0
-                    and len(cell.paragraphs[0].runs) > 0 
+                    and len(cell.paragraphs[0].runs) > 0
                     and cell.paragraphs[0].runs[0].bold
                     and ('samenvatting' in cell.text.lower()
                          or 'summary' in cell.text.lower())):
@@ -224,7 +234,7 @@ def collectFromTables(rba_path):
 
     return references_list
 
-def pubmed2csv(references_list, csv_path):
+def pubmed2csv(references_list, csv_path, email):
     """Creates a csv file consists of the references
 
     Parameters
@@ -239,40 +249,58 @@ def pubmed2csv(references_list, csv_path):
     -------
     Creates a csv file on the given CSV path
     """
+    logging.info('PROCESSING THE FILE: {}'.format(csv_path))
+
     if not os.path.exists(csv_path):
+        pmids = []
         header = ['pubmed_id', 'title', 'abstract', 'doi', 'final_included']
         with open(csv_path, 'w', newline='') as csvfile:
             cw = csv.writer(csvfile, delimiter=',')
             cw.writerow(header)
 
+    elif os.path.exists(csv_path):
+        with open(csv_path, 'r', newline='') as csvfile:
+            cw = csv.reader(csvfile)
+            header = next(cw)
+
+            rows = []
+            for row in cw:
+                rows.append(row)
+
+        pmids = [l[0] for l in rows]
+
     #Loop over the reference list
     for ref in references_list:
         search_query = ref['p_doi'] if 'p_doi' in ref and len(ref['p_doi']) > 0 else ref['p_title']
         try:
-            PubmedSearchResults = search_API(search_query)
+            PubmedSearchResults = search_API(search_query, email)
             id_list = PubmedSearchResults['IdList']
-            papers = fetch_details(id_list)
+            papers = fetch_details(id_list, email)
             referenceFound = False
-
             for paperIndex, paper in enumerate(papers['PubmedArticle']):
-                paperTitle = paper['MedlineCitation']['Article']['ArticleTitle'].strip(punctuation).strip()
-                if (Simhash(paperTitle).distance(Simhash(ref['p_title'])) <= 5):
-                    doi = ''
-                    for idn, ids in enumerate(papers['PubmedArticle'][paperIndex]['PubmedData']['ArticleIdList']):
-                        if papers['PubmedArticle'][paperIndex]['PubmedData']['ArticleIdList'][idn].attributes['IdType'] == 'doi':
-                            doi = papers['PubmedArticle'][paperIndex]['PubmedData']['ArticleIdList'][idn]
+                if ((id_list[paperIndex] not in pmids) or pmids == []):
+                    paperTitle = paper['MedlineCitation']['Article']['ArticleTitle'].strip(punctuation).strip()
+                    if (Simhash(paperTitle).distance(Simhash(ref['p_title'])) <= 5):
+                        doi = ''
+                        for idn, ids in enumerate(papers['PubmedArticle'][paperIndex]['PubmedData']['ArticleIdList']):
+                            if papers['PubmedArticle'][paperIndex]['PubmedData']['ArticleIdList'][idn].attributes['IdType'] == 'doi':
+                                doi = papers['PubmedArticle'][paperIndex]['PubmedData']['ArticleIdList'][idn]
 
-                    abstract = ''
-                    if 'Abstract' in paper['MedlineCitation']['Article']:
-                        abstract = ' '.join([str(x) for x in paper['MedlineCitation']['Article']['Abstract']['AbstractText']])
+                        abstract = ''
+                        if 'Abstract' in paper['MedlineCitation']['Article']:
+                            abstract = ' '.join([str(x) for x in paper['MedlineCitation']['Article']['Abstract']['AbstractText']])
 
-                    data = [id_list[paperIndex], paperTitle, abstract, doi, 1]
-                    with open(csv_path, 'a') as csvfile:
-                        cw = csv.writer(csvfile, delimiter=',')
-                        cw.writerow(data)
-                    referenceFound = True
-                    break
+                        data = [id_list[paperIndex], paperTitle, abstract, doi, 1]
+                        with open(csv_path, 'a', newline='') as csvfile:
+                            cw = csv.writer(csvfile, delimiter=',')
+                            cw.writerow(data)
+                        referenceFound = True
+                        pmids.append(id_list[paperIndex])
+                        break
+                else:
+                    logging.debug('The reference "{}" is already in the csv file, therefore skipped.'.format(ref['p_title']))
+
             if not referenceFound:
-                print('!!!!!!!!!!!!!!! The reference could not be found automaticaly: ', search_query)
-        except:
-            print('!!!! The reference could not be found automaticaly: ', ref['p_title'])
+                logging.error('!!!!! The reference could not be retrieved from the PubMed database. Search query was: "{}". Paper title was: "{}"'.format(search_query, ref['p_title']))
+        except Exception as err:
+            logging.error('!!! The reference could not be found automaticaly for the title "{}". Error message: {}'.format(ref['p_title'], err))
