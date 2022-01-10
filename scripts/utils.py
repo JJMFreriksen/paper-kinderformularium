@@ -123,10 +123,11 @@ def collectFromEndnote(rba_path):
                     'p_title': '',
                     'p_doi': ''
                 }
-#                 x1 = re.findall("(.*et al.?)([^.]+).", ref)
-                x1 = re.findall("([^.]+).([^.]+).", ref)
+                
+                x1 = re.findall("([^.]+).([^?|^.]+).", ref)
                 x2 = re.findall("(.*)\d{4}.?\s?(\".*\")", ref)
                 x3 = re.findall(r'doi:?\s?(.+).?', ref)
+                x4 = re.findall("(.*et al.?)([^?|^.]+).", ref)
 
                 if x3:
                     search_item['p_doi'] = x3[0].strip(punctuation).strip()
@@ -138,6 +139,10 @@ def collectFromEndnote(rba_path):
                 if x2:
                     search_item['p_authors'] = x2[0][0].strip(punctuation).strip()
                     search_item['p_title'] = x2[0][1].strip(punctuation).strip()
+                    
+                if ('et al.' in ref) and x4:
+                    search_item['p_authors'] = x4[0][0].strip(punctuation).strip()
+                    search_item['p_title'] = x4[0][1].strip(punctuation).strip()
 
                 elif (ref.lower().startswith('who') or ref.lower().startswith('lci') \
                       or ref.lower().startswith('nvn') or ref.lower().startswith('nice')):
@@ -275,12 +280,16 @@ def pubmed2csv(references_list, csv_path, email):
         try:
             PubmedSearchResults = search_API(search_query, email)
             id_list = PubmedSearchResults['IdList']
+            if id_list == [] and 'p_doi' in ref:
+                new_search_query = ref['p_title']
+                PubmedSearchResults = search_API(new_search_query, email)
+                id_list = PubmedSearchResults['IdList']
             papers = fetch_details(id_list, email)
             referenceFound = False
             for paperIndex, paper in enumerate(papers['PubmedArticle']):
                 if ((id_list[paperIndex] not in pmids) or pmids == []):
-                    paperTitle = paper['MedlineCitation']['Article']['ArticleTitle'].strip(punctuation).strip()
-                    if (Simhash(paperTitle).distance(Simhash(ref['p_title'])) <= 5):
+                    paperTitle = paper['MedlineCitation']['Article']['ArticleTitle'].strip()
+                    if (Simhash(paperTitle.strip(punctuation)).distance(Simhash(ref['p_title'])) <= 5):
                         doi = ''
                         for idn, ids in enumerate(papers['PubmedArticle'][paperIndex]['PubmedData']['ArticleIdList']):
                             if papers['PubmedArticle'][paperIndex]['PubmedData']['ArticleIdList'][idn].attributes['IdType'] == 'doi':
@@ -289,7 +298,6 @@ def pubmed2csv(references_list, csv_path, email):
                         abstract = ''
                         if 'Abstract' in paper['MedlineCitation']['Article']:
                             abstract = ' '.join([str(x) for x in paper['MedlineCitation']['Article']['Abstract']['AbstractText']])
-
                         data = [id_list[paperIndex], paperTitle, abstract, doi, 1]
                         with open(csv_path, 'a', newline='') as csvfile:
                             cw = csv.writer(csvfile, delimiter=',')
@@ -297,10 +305,11 @@ def pubmed2csv(references_list, csv_path, email):
                         referenceFound = True
                         pmids.append(id_list[paperIndex])
                         break
-                else:
+                elif (id_list[paperIndex] in pmids):
                     logging.debug('The reference "{}" is already in the csv file, therefore skipped.'.format(ref['p_title']))
-
-            if not referenceFound:
+                    referenceFound = True
+                    break
+            if (not referenceFound) and (id_list[paperIndex] not in pmids):
                 logging.error('!!!!! The reference could not be retrieved from the PubMed database. Search query was: "{}". Paper title was: "{}"'.format(search_query, ref['p_title']))
         except Exception as err:
             logging.error('!!! The reference could not be found automaticaly for the title "{}". Error message: {}'.format(ref['p_title'], err))
