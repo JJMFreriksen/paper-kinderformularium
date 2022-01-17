@@ -50,7 +50,7 @@ Risk Analysis Documents to ASReview LAB compatible input files.
 *  Check if git is installed. If the following command is giving the version number git is already installed please skip the next step.  
 Or it is a warning like 'git' is not recognized as an internal or external command'. git is not installed please continue with the next step.
   ``` bash
-    git --version
+    git version
   ```
 
 *  If git is not already installed, you can install it by following the instructions in this link: [https://phoenixnap.com/kb/how-to-install-git-windows](https://phoenixnap.com/kb/how-to-install-git-windows).
