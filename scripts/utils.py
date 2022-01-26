@@ -287,9 +287,9 @@ def pubmed2csv(references_list, csv_path, email):
             papers = fetch_details(id_list, email)
             referenceFound = False
             for paperIndex, paper in enumerate(papers['PubmedArticle']):
-                if ((id_list[paperIndex] not in pmids) or pmids == []):
-                    paperTitle = paper['MedlineCitation']['Article']['ArticleTitle'].strip()
-                    if (Simhash(paperTitle.strip(punctuation)).distance(Simhash(ref['p_title'])) <= 5):
+                paperTitle = paper['MedlineCitation']['Article']['ArticleTitle'].strip()
+                if (Simhash(paperTitle.strip(punctuation)).distance(Simhash(ref['p_title'])) <= 5):
+                    if ((id_list[paperIndex] not in pmids) or pmids == []):
                         doi = ''
                         for idn, ids in enumerate(papers['PubmedArticle'][paperIndex]['PubmedData']['ArticleIdList']):
                             if papers['PubmedArticle'][paperIndex]['PubmedData']['ArticleIdList'][idn].attributes['IdType'] == 'doi':
@@ -305,10 +305,10 @@ def pubmed2csv(references_list, csv_path, email):
                         referenceFound = True
                         pmids.append(id_list[paperIndex])
                         break
-                elif (id_list[paperIndex] in pmids):
-                    logging.debug('The reference "{}" is already in the csv file, therefore skipped.'.format(ref['p_title']))
-                    referenceFound = True
-                    break
+                    elif (id_list[paperIndex] in pmids):
+                        logging.debug('The reference "{}" is already in the csv file, therefore skipped.'.format(ref['p_title']))
+                        referenceFound = True
+                        break
             if (not referenceFound) and (id_list[paperIndex] not in pmids):
                 logging.error('!!!!! The reference could not be retrieved from the PubMed database. Search query was: "{}". Paper title was: "{}"'.format(search_query, ref['p_title']))
         except Exception as err:
