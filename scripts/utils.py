@@ -259,12 +259,12 @@ def pubmed2csv(references_list, csv_path, email):
     if not os.path.exists(csv_path):
         pmids = []
         header = ['pubmed_id', 'title', 'abstract', 'doi', 'final_included']
-        with open(csv_path, 'w', newline='') as csvfile:
+        with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
             cw = csv.writer(csvfile, delimiter=',')
             cw.writerow(header)
 
     elif os.path.exists(csv_path):
-        with open(csv_path, 'r', newline='') as csvfile:
+        with open(csv_path, 'r', newline='', encoding='utf-8') as csvfile:
             cw = csv.reader(csvfile)
             header = next(cw)
 
@@ -299,7 +299,7 @@ def pubmed2csv(references_list, csv_path, email):
                         if 'Abstract' in paper['MedlineCitation']['Article']:
                             abstract = ' '.join([str(x) for x in paper['MedlineCitation']['Article']['Abstract']['AbstractText']])
                         data = [id_list[paperIndex], paperTitle, abstract, doi, 1]
-                        with open(csv_path, 'a', newline='') as csvfile:
+                        with open(csv_path, 'a', newline='', encoding='utf-8') as csvfile:
                             cw = csv.writer(csvfile, delimiter=',')
                             cw.writerow(data)
                         referenceFound = True
