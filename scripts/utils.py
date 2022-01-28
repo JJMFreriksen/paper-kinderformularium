@@ -123,7 +123,7 @@ def collectFromEndnote(rba_path):
                     'p_title': '',
                     'p_doi': ''
                 }
-                
+
                 x1 = re.findall("([^.]+).([^?|^.]+).", ref)
                 x2 = re.findall("(.*)\d{4}.?\s?(\".*\")", ref)
                 x3 = re.findall(r'doi:?\s?(.+).?', ref)
@@ -139,7 +139,7 @@ def collectFromEndnote(rba_path):
                 if x2:
                     search_item['p_authors'] = x2[0][0].strip(punctuation).strip()
                     search_item['p_title'] = x2[0][1].strip(punctuation).strip()
-                    
+
                 if ('et al.' in ref) and x4:
                     search_item['p_authors'] = x4[0][0].strip(punctuation).strip()
                     search_item['p_title'] = x4[0][1].strip(punctuation).strip()
@@ -259,12 +259,12 @@ def pubmed2csv(references_list, csv_path, email):
     if not os.path.exists(csv_path):
         pmids = []
         header = ['pubmed_id', 'title', 'abstract', 'doi', 'final_included']
-        with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
+        with open(csv_path, 'w', newline='', encoding='utf-8', errors='ignore') as csvfile:
             cw = csv.writer(csvfile, delimiter=',')
             cw.writerow(header)
 
     elif os.path.exists(csv_path):
-        with open(csv_path, 'r', newline='', encoding='utf-8') as csvfile:
+        with open(csv_path, 'r', newline='', encoding='utf-8', errors='ignore') as csvfile:
             cw = csv.reader(csvfile)
             header = next(cw)
 
@@ -299,7 +299,7 @@ def pubmed2csv(references_list, csv_path, email):
                         if 'Abstract' in paper['MedlineCitation']['Article']:
                             abstract = ' '.join([str(x) for x in paper['MedlineCitation']['Article']['Abstract']['AbstractText']])
                         data = [id_list[paperIndex], paperTitle, abstract, doi, 1]
-                        with open(csv_path, 'a', newline='', encoding='utf-8') as csvfile:
+                        with open(csv_path, 'a', newline='', encoding='utf-8', errors='ignore') as csvfile:
                             cw = csv.writer(csvfile, delimiter=',')
                             cw.writerow(data)
                         referenceFound = True
