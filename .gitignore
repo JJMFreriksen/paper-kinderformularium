@@ -29,7 +29,7 @@ share/python-wheels/
 MANIFEST
 
 LSH/
-data/
+DATA/
 efetch.dtd
 .DS_Store
 
