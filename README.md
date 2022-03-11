@@ -209,5 +209,8 @@ For example:
 ## License
 The content in this repository is published under the [MIT license](https://github.com/asreview/paper-kinderformularium/blob/main/LICENSE).
 
+## Funding
+This project has received funding from [Radboud AI](https://www.ru.nl/ai/research-education/radboud-ai-innovation-voucher/innovation-vouchers-2021/right-dose-right-time-ai-safe-effective-paediatric/).
+
 ## Contact
 For any questions or remarks, please send an email to Jolien.Freriksen@radboudumc.nl
