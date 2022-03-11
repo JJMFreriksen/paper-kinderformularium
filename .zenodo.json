@@ -1,0 +1,21 @@
+{
+	"description": "ABSTRACT",
+	"title": "TITLE",
+	"creators": [{
+			"name": "NAME",
+			"affiliation": "AFFILIATON",
+			"orcid": "NR"
+		},
+		{
+			"name": "NAME",
+			"affiliation": "AFFILIATON",
+			"orcid": "NR"
+		}
+	],
+	"keywords": [
+		"systematic review",
+		"xxx"
+	],
+	"license": "MIT",
+	"upload_type": "software"
+}
