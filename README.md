@@ -210,4 +210,4 @@ For example:
 The content in this repository is published under the [MIT license](https://github.com/asreview/paper-kinderformularium/blob/main/LICENSE).
 
 ## Contact
-For any questions or remarks, please send an email to asreview@uu.nl.
+For any questions or remarks, please send an email to Jolien.Freriksen@radboudumc.nl
